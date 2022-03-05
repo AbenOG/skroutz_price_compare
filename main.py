@@ -22,16 +22,14 @@ def dataPath():
 
 def readFile():
     lines = []
-
     with open('links.txt', 'r', encoding='UTF-8') as file:
         try:
             for line in file.readlines():
-                if not line.startswith(r'https://www.skroutz.gr'):
-                    pass
-                else:
+                if line.startswith('https://www.skroutz.gr'):
                     lines.append(line)
+                else:
+                    pass
             return getContent(lines)
-
         except FileNotFoundError:
             with open('links.txt', 'w', encoding='UTF-8') as _file:
                 _file.write(f'File Auto generated: {getTime()}\n'
@@ -41,69 +39,64 @@ def readFile():
                             f'3. Every new link HAS to be in a new line!\n'
                             f'4. Restart the program and try again\n'
                             f'Note: If the file is not set correctly no data will be displayed during runtime')
-                return print(Fore.LIGHTRED_EX,
-                             'File (links.txt) not found.\n'
-                             'Generated a new one successfully inside the executable path.\n'
-                             'Please populate the txt file with links.\n'
-                             'Read the file generated for instructions.')
+            return print(Fore.LIGHTRED_EX,
+                         'File (links.txt) not found.\n'
+                         'Generated a new one successfully inside the executable path.\n'
+                         'Please populate the txt file with links.\n'
+                         'Read the file generated for instructions.')
 
 
 def getContent(url):
-    wordcount = 0
-    for line in url:
-        if line.startswith('https://www.skroutz.gr'):
-            wordcount += 1
+    with sync_playwright() as p:
+        if len(url) > 0:
+            for x in range(0, len(url)):
+                if x == 0:
+                    browser = p.chromium.launch_persistent_context(f'{dataPath()}' + '\\browserData',
+                                                                   java_script_enabled=True,
+                                                                   bypass_csp=True, user_agent=user_agent,
+                                                                   locale="el-GR",
+                                                                   headless=True, timezone_id='Europe/Athens')
+                page = browser.new_page()
+
+                page.goto(url[x] + "#shops")
+                content = page.content()
+
+                s = soup(content, 'html.parser')
+
+                dominant_price = s.find_all(class_="dominant-price")
+                shop_name = s.find_all(class_="shop-name")
+                product_title = s.find_all("title")
+
+                shopName = []
+                shopPrice = []
+                productTitle = clean_html.sub('', str(product_title))
+
+                for names in shop_name:
+                    newName = str(names)
+                    cleanName = clean_html.sub('', newName)
+                    shopName.append(cleanName)
+
+                for price in dominant_price:
+                    newPrice = str(price)
+                    cleanPrice = clean_html.sub('', newPrice)
+                    try:
+                        shopPrice.append(
+                            float(cleanPrice.replace('.', '').replace(",", "").replace("€", "")) / 100)
+
+                        _min = min(shopPrice, default=0)
+                    except ValueError:
+                        pass
+
+                if x == len(url) - 1:
+                    page.close()
+                    browser.close()
+                    p.stop()
+
+                processContent(shopName, shopPrice, productTitle, _min)
         else:
-            pass
-        with sync_playwright() as p:
-            if wordcount >= 1:
-                for x in range(0, len(url)):
-                    if x == 0:
-                        browser = p.chromium.launch_persistent_context(f'{dataPath()}' + '\\browserData',
-                                                                       java_script_enabled=True,
-                                                                       bypass_csp=True, user_agent=user_agent,
-                                                                       locale="el-GR",
-                                                                       headless=True, timezone_id='Europe/Athens')
-                    page = browser.new_page()
-
-                    page.goto(url[x] + "#shops")
-                    content = page.content()
-
-                    s = soup(content, 'html.parser')
-
-                    dominant_price = s.find_all(class_="dominant-price")
-                    shop_name = s.find_all(class_="shop-name")
-                    product_title = s.find_all("title")
-
-                    shopName = []
-                    shopPrice = []
-                    productTitle = clean_html.sub('', str(product_title))
-
-                    for names in shop_name:
-                        newName = str(names)
-                        cleanName = clean_html.sub('', newName)
-                        shopName.append(cleanName)
-
-                    for price in dominant_price:
-                        newPrice = str(price)
-                        cleanPrice = clean_html.sub('', newPrice)
-                        try:
-                            shopPrice.append(
-                                float(cleanPrice.replace('.', '').replace(",", "").replace("€", "")) / 100)
-
-                            _min = min(shopPrice, default=0)
-                        except ValueError:
-                            pass
-
-                    if x == len(url) - 1:
-                        page.close()
-                        browser.close()
-                        p.stop()
-
-                    processContent(shopName, shopPrice, productTitle, _min)
-            else:
-                return print(Fore.LIGHTRED_EX,
-                             "The file is not populated with links, please read the instructions and try again.")
+            os.system('cls')
+            print(Fore.LIGHTRED_EX, 'No links inside the list, populate the list and try again.')
+            return p.stop()
 
 
 def processContent(shopName, price, title, _min):
@@ -136,14 +129,14 @@ def processContent(shopName, price, title, _min):
             _data.write(f'==========================================================\n'
                         f'date: {getTime()}\n\n'
                         f'Product: {title}\n'
-                        f'Average Price: {avg / prodCount}\n'
+                        f'Average Price: {avg / prodCount:.2f}\n'
                         f'Lowest price: {_min}\n\n')
     else:
         with (open(path, 'a', encoding='UTF-8')) as data:
             data.write(f'==========================================================\n'
                        f'date: {getTime()}\n\n'
                        f'Product: {title}\n'
-                       f'Average Price: {avg / prodCount}\n'
+                       f'Average Price: {avg / prodCount:.2f}\n'
                        f'Lowest price: {_min}\n\n')
 
 
