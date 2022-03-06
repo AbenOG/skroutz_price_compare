@@ -1,12 +1,26 @@
 import re
+import sys
 from bs4 import BeautifulSoup as soup
 from colorama import Fore
 from playwright.sync_api import sync_playwright
 from datetime import datetime
 import os
+import platform
 
 clean_html = re.compile(r'<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});')
 user_agent = r'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36'
+
+
+def getCfg(cfg):
+    clear()
+    return readFile(cfg)
+
+
+def clear():
+    if platform.system() == 'Linux' or platform.system() == 'Darwin':
+        return os.system('clear')
+    else:
+        return os.system('cls')
 
 
 def getTime():
@@ -20,7 +34,7 @@ def dataPath():
     return path
 
 
-def readFile():
+def readFile(cfg):
     lines = []
     with open('links.txt', 'r', encoding='UTF-8') as file:
         try:
@@ -29,7 +43,7 @@ def readFile():
                     lines.append(line)
                 else:
                     pass
-            return getContent(lines)
+            return getContent(lines, cfg)
         except FileNotFoundError:
             with open('links.txt', 'w', encoding='UTF-8') as _file:
                 _file.write(f'File Auto generated: {getTime()}\n'
@@ -46,19 +60,26 @@ def readFile():
                          'Read the file generated for instructions.')
 
 
-def getContent(url):
+def getContent(url, cfg):
     with sync_playwright() as p:
         if len(url) > 0:
+            print(Fore.LIGHTGREEN_EX + 'Loading data..\n')
             for x in range(0, len(url)):
                 if x == 0:
                     browser = p.chromium.launch_persistent_context(f'{dataPath()}' + '\\browserData',
-                                                                   java_script_enabled=True,
-                                                                   bypass_csp=True, user_agent=user_agent,
-                                                                   locale="el-GR",
-                                                                   headless=True, timezone_id='Europe/Athens')
+                                                                   java_script_enabled=cfg.get('js'),
+                                                                   bypass_csp=cfg.get('csp'),
+                                                                   user_agent=user_agent,
+                                                                   locale=cfg.get('locale'),
+                                                                   headless=cfg.get('headless'),
+                                                                   timezone_id=cfg.get('tmz_id'))
                 page = browser.new_page()
 
-                page.goto(url[x] + "#shops")
+                if url[x].endswith('#shops'):
+                    page.goto(url[x])
+                else:
+                    page.goto(url[x] + "#shops")
+
                 content = page.content()
 
                 s = soup(content, 'html.parser')
@@ -85,7 +106,7 @@ def getContent(url):
 
                         _min = min(shopPrice, default=0)
                     except ValueError:
-                        pass
+                        break
 
                 if x == len(url) - 1:
                     page.close()
@@ -94,8 +115,8 @@ def getContent(url):
 
                 processContent(shopName, shopPrice, productTitle, _min)
         else:
-            os.system('cls')
-            print(Fore.LIGHTRED_EX, 'No links inside the list, populate the list and try again.')
+            clear()
+            print(Fore.LIGHTRED_EX + 'No links inside the list, populate the list and try again.')
             return p.stop()
 
 
@@ -104,41 +125,40 @@ def processContent(shopName, price, title, _min):
     avg = 0
     prodCount = 0
 
-    print(Fore.LIGHTMAGENTA_EX, f'\n\n{title:^15}')
+    print(Fore.LIGHTMAGENTA_EX + f'\n\n{title:^15}')
 
-    print(Fore.LIGHTBLACK_EX, '==========================================')
-    print(Fore.LIGHTYELLOW_EX, f'{"Store":<15}{"Price":>15}\n')
+    print(Fore.LIGHTBLACK_EX + '==========================================')
+    print(Fore.LIGHTYELLOW_EX + f'{"Store":<15}{"Price":>15}\n')
 
     try:
         for x in range(len(price)):
             if price[x] == _min and _min != price[x - 1]:
-                print(Fore.LIGHTGREEN_EX, f'{shopName[x]:<15}{price[x]:>15}  <- Lowest Price')
+                print(Fore.LIGHTGREEN_EX + f'{shopName[x]:<15}{price[x]:>15}  <- Lowest Price')
                 avg += price[x]
                 prodCount += 1
             else:
-                print(Fore.LIGHTWHITE_EX, f'{shopName[x]:<15}{price[x]:>15}')
+                print(Fore.LIGHTWHITE_EX + f'{shopName[x]:<15}{price[x]:>15}')
                 avg += price[x]
                 prodCount += 1
     except IndexError:
         pass
-    print(Fore.LIGHTBLACK_EX, '==========================================\n\n')
+    print(Fore.LIGHTBLACK_EX + '==========================================\n\n')
 
-    if not os.path.isfile(path):
-        with (open(path, 'w', encoding='UTF-8')) as _data:
+    try:
+        if not os.path.isfile(path):
+            with (open(path, 'w', encoding='UTF-8')) as _data:
 
-            _data.write(f'==========================================================\n'
-                        f'date: {getTime()}\n\n'
-                        f'Product: {title}\n'
-                        f'Average Price: {avg / prodCount:.2f}\n'
-                        f'Lowest price: {_min}\n\n')
-    else:
-        with (open(path, 'a', encoding='UTF-8')) as data:
-            data.write(f'==========================================================\n'
-                       f'date: {getTime()}\n\n'
-                       f'Product: {title}\n'
-                       f'Average Price: {avg / prodCount:.2f}\n'
-                       f'Lowest price: {_min}\n\n')
-
-
-if __name__ == '__main__':
-    readFile()
+                _data.write(f'==========================================================\n'
+                            f'date: {getTime()}\n\n'
+                            f'Product: {title}\n'
+                            f'Average Price: {avg / prodCount:.2f}\n'
+                            f'Lowest price: {_min}\n\n')
+        else:
+            with (open(path, 'a', encoding='UTF-8')) as data:
+                data.write(f'==========================================================\n'
+                           f'date: {getTime()}\n\n'
+                           f'Product: {title}\n'
+                           f'Average Price: {avg / prodCount:.2f}\n'
+                           f'Lowest price: {_min}\n\n')
+    except ZeroDivisionError:
+        return print(Fore.LIGHTRED_EX + 'Something went wrong, Check your entries and try again.'), sys.exit()
