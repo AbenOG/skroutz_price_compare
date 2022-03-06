@@ -54,6 +54,7 @@ def readConfig():
         if status_ok:
 
             cfg.set('config', 'iscaptcha', 'False')
+            cfg.set('config', 'headless', 'True')
 
             with open('config.ini', 'w', encoding='UTF-8') as conf:
                 cfg.write(conf)
@@ -106,7 +107,7 @@ def readConfig():
                                      'Headless mode will not work during this phase, usually for about an hour or two.\n'
                                      'For now this is the only way to get through this.\n'
                                      'After you verify and solve the captcha, please press the Enter key button on your keyboard.\n'
-                                     'While in this phase, the program will continue starting in windowed mode instead of headless until it goes back to normal.\n')
+                                     'While in this phase, the program will continue starting in windowed mode instead until it goes back to normal.\n')
             print(Fore.LIGHTYELLOW_EX +
                   'Note:\n'
                   'Even after verification, the program will continue to execute in windowed mode.\n'

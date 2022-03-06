@@ -79,7 +79,7 @@ def getContent(url, cfg):
                                                                    timezone_id=cfg.get('tmz_id'),
                                                                    no_viewport=True,
                                                                    viewport=None,
-                                                                   args=["--window-size=800,800"],
+                                                                   args=["--window-size=1000,720"],
                                                                    timeout=20000)
                     _page = browser.new_page()
                     _page.goto('https://skroutz.gr')
@@ -104,7 +104,7 @@ def getContent(url, cfg):
                                                                    bypass_csp=cfg.get('csp'),
                                                                    user_agent=user_agent,
                                                                    locale=cfg.get('locale'),
-                                                                   headless=cfg.get('iscaptcha'),
+                                                                   headless=cfg.get('headless'),
                                                                    timezone_id=cfg.get('tmz_id'))
                 if browser:
                     page = browser.new_page()
