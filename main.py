@@ -83,7 +83,7 @@ def getContent(url, cfg):
                                                                    timeout=20000)
                     _page = browser.new_page()
                     _page.goto('https://skroutz.gr')
-                    time.sleep(20)
+                    input(Fore.LIGHTRED_EX + 'Please press enter when done verifying the captcha.')
                     doneCaptcha = True
 
                 if x == 0 and cfg.get('iscaptcha') and doneCaptcha:
@@ -115,6 +115,8 @@ def getContent(url, cfg):
                         page.goto(url[x] + "#shops")
 
                     time.sleep(.35)
+                    page.mouse.wheel(0, 2000)
+                    time.sleep(.25)
                     page.mouse.wheel(0, 2000)
                     time.sleep(.25)
                     page.mouse.wheel(0, 2000)
@@ -198,16 +200,14 @@ def processContent(shopName, price, title, _min):
                 _data.write(f'==========================================================\n'
                             f'date: {getTime()}\n\n'
                             f'Product: {title}\n'
-                            f'Average Price: {avg / prodCount:.2f}\n'
-                            f'From {prodCount} different stores\n'
+                            f'Average Price: {avg / prodCount:.2f} From {prodCount} different stores\n'
                             f'Lowest price: {_min}\n\n')
         else:
             with (open(path, 'a', encoding='UTF-8')) as data:
                 data.write(f'==========================================================\n'
                            f'date: {getTime()}\n\n'
                            f'Product: {title}\n'
-                           f'Average Price: {avg / prodCount:.2f}\n'
-                           f'From {prodCount} different stores\n'
+                           f'Average Price: {avg / prodCount:.2f} From {prodCount} different stores\n'
                            f'Lowest price: {_min}\n\n')
     except ZeroDivisionError:
         return print(Fore.LIGHTRED_EX + 'Zero division error, meaning no products were added.\n'

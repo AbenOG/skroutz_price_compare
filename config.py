@@ -105,8 +105,7 @@ def readConfig():
                                      'Skroutz.gr has blocked your access unless you verify you\'re not a robot\n'
                                      'Headless mode will not work during this phase, usually for about an hour or two.\n'
                                      'For now this is the only way to get through this.\n'
-                                     'After you verify and solve the captcha, please wait a few seconds it\'s going to proceed automatically.\n'
-                                     'Note that you only have 20 seconds to solve the captcha\n'
+                                     'After you verify and solve the captcha, please press the Enter key button on your keyboard.\n'
                                      'While in this phase, the program will continue starting in windowed mode instead of headless until it goes back to normal.\n')
             print(Fore.LIGHTYELLOW_EX +
                   'Note:\n'
