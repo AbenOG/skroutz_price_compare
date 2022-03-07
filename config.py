@@ -7,6 +7,7 @@ from main import getCfg, dataPath, clear
 from playwright.sync_api import sync_playwright
 
 
+
 def readConfig():
     with sync_playwright() as p:
         # Here we need to Launch our Chromium browser to save the webpage status.

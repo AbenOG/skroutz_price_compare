@@ -45,8 +45,8 @@ def readFile(cfg, page_status):
 
     # Open the links file and check all the lines that start with "https://www.skroutz.gr"
     # Then append them to the "lines" list created above.
-    with open('links.txt', 'r', encoding='UTF-8') as file:
-        try:
+    try:
+        with open('links.txt', 'r', encoding='UTF-8') as file:
             for line in file.readlines():
                 if line.startswith('https://www.skroutz.gr'):
                     lines.append(line)
@@ -54,21 +54,22 @@ def readFile(cfg, page_status):
                     pass
             return getContent(lines, cfg, page_status)
 
-        # If the links.txt file is not found, it will create a new one and exit the script.
-        except FileNotFoundError:
-            with open('links.txt', 'w', encoding='UTF-8') as _file:
-                _file.write(f'File Auto generated: {getTime()}\n'
-                            f'How to use:\n'
-                            f'1. Copy the Skroutz product link\n'
-                            f'2. Paste\n'
-                            f'3. Every new link HAS to be in a new line!\n'
-                            f'4. Restart the program and try again\n'
-                            f'Note: If the file is not set correctly no data will be displayed during runtime')
-            return print(Fore.LIGHTRED_EX,
-                         'File (links.txt) not found.\n'
-                         'Generated a new one successfully inside the executable path.\n'
-                         'Please populate the txt file with links.\n'
-                         'Read the file generated for instructions.'), sys.exit()
+    # If the links.txt file is not found, it will create a new one and exit the script.
+    except FileNotFoundError:
+        with open('links.txt', 'w', encoding='UTF-8') as _file:
+            _file.write(f'File Auto generated: {getTime()}\n'
+                        f'How to use:\n'
+                        f'1. Copy the Skroutz product link\n'
+                        f'2. Paste\n'
+                        f'3. Every new link HAS to be in a new line!\n'
+                        f'4. "Don\'t Leave any whitespaces inbetween.'
+                        f'5. Restart the program and try again\n'
+                        f'Note: If the file is not set correctly no data will be displayed during runtime')
+    return print(Fore.LIGHTRED_EX,
+                 'File "links.txt" not found.\n'
+                 'Created a new one successfully inside the executable path.\n'
+                 'Please populate the txt file with links.\n'
+                 'Read the file generated for instructions.'), sys.exit()
 
 
 def getContent(url, cfg, page_status):
