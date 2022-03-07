@@ -65,7 +65,7 @@ def readFile(cfg, page_status):
                         f'4. "Don\'t Leave any whitespaces inbetween.\n'
                         f'5. Restart the program and try again\n'
                         f'Note: If the file is not set correctly no data will be displayed during runtime')
-    return print(Fore.LIGHTRED_EX,
+    return print(Fore.RED +
                  'File "links.txt" not found.\n'
                  'Created a new one successfully inside the executable path.\n'
                  'Please populate the txt file with links.\n'
@@ -77,9 +77,8 @@ def getContent(url, cfg, page_status):
     # The "X" holds the number of the URLs fetched from the script above.
     # If the "X" Equals to 0 then we initialize our browser for the first time.
     # If the "X" > 0 we just need to switch pages and go to the next one after each iteration.
-
-    with sync_playwright() as p:
-        if len(url) > 0:
+    if len(url) > 0:
+        with sync_playwright() as p:
             print(Fore.LIGHTGREEN_EX + 'Loading data..\n')
             for x in range(0, len(url)):
                 # First we need to verify the captcha.
@@ -98,7 +97,7 @@ def getContent(url, cfg, page_status):
                                                                    args=["--window-size=1000,720"])
                     _page = browser.new_page()
                     _page.goto('https://skroutz.gr')
-                    input(Fore.LIGHTRED_EX + 'Please press enter when done verifying the captcha.')
+                    input(Fore.LIGHTGREEN_EX + 'Please press enter when done verifying the captcha.')
 
                 if x == 0 and page_status.ok:
                     browser = p.chromium.launch_persistent_context(f'{dataPath()}' + '\\browserData',
@@ -181,10 +180,10 @@ def getContent(url, cfg, page_status):
                         p.stop()
 
                     processContent(shopName, shopPrice, productTitle, _min)
-        else:
-            clear()
-            print(Fore.LIGHTRED_EX + 'No links inside the list, populate the list and try again.')
-            return p.stop()
+    else:
+        clear()
+        print(Fore.RED + 'Invalid OR No links inside the list, populate the list and try again.')
+        return sys.exit()
 
 
 def processContent(shopName, price, title, _min):
@@ -231,8 +230,8 @@ def processContent(shopName, price, title, _min):
                            f'Average Price: {avg / prodCount:.2f} From {prodCount} different stores\n'
                            f'Lowest price: {_min}\n\n')
     except ZeroDivisionError:
-        return print(Fore.LIGHTRED_EX + 'Zero division error, meaning no products were added.\n'
-                                        '1. The website is offline or your internet connection dropped.\n'
-                                        '2. The website thinks you are a robot due to many requests and requires further manual verification\n'
-                                        '3. The links you provided are invalid.\n'
-                                        'If number 2 is true, rerun the program and solve the captcha.'), sys.exit()
+        return print(Fore.RED + 'Zero division error, meaning no products were added.\n'
+                                '1. The website is offline or your internet connection dropped.\n'
+                                '2. The website thinks you are a robot due to many requests and requires further manual verification\n'
+                                '3. The links you provided are invalid.\n'
+                                'If number 2 is true, rerun the program and solve the captcha.'), sys.exit()

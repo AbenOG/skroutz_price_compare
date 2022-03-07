@@ -44,7 +44,7 @@ def readConfig():
 
         # Some OS's like Linux or macOS might need extended permissions to perform this action.
         except PermissionError:
-            return print(Fore.LIGHTRED_EX + "Insufficient permissions: \n"
+            return print(Fore.RED + "Insufficient permissions: \n"
                                             "Please run the script again as an Admin, or give it the appropriate permissions."), sys.exit()
 
         print(Fore.LIGHTGREEN_EX + 'Configuration generated successfully inside the executable directory ✔\n'
@@ -74,7 +74,7 @@ def readConfig():
 
             # Send warning + helpful instructions if the website blocked users network from too many requests.
             if page_status.status == 429:
-                print(Fore.LIGHTRED_EX + '\n!! WARNING !! >[HEADLESS MODE TEMPORARILY DISABLED]<\n'
+                print(Fore.RED + '\n!! WARNING !! >[HEADLESS MODE TEMPORARILY DISABLED]<\n'
                                          '========================================================\n'
                                          'Because of the unusual number of requests coming from your network\n'
                                          'Skroutz.gr has blocked your access unless you verify you\'re not a robot\n'
@@ -93,7 +93,7 @@ def readConfig():
             return getCfg(cfgValues, page_status)
         else:
             print(
-                Fore.LIGHTRED_EX + 'Site or internet connection Offline, please check your network configuration and try again.')
+                Fore.RED + 'Site or internet connection Offline, please check your network configuration and try again.')
 
 
 if __name__ == '__main__':
