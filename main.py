@@ -18,11 +18,11 @@ user_agent = r'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHT
 def animate(done):
     for c in itertools.cycle(['.', '..', '...', '....']):
         if done():
-            sys.stdout.write('\rDone!     ')
             break
         sys.stdout.write(Fore.LIGHTCYAN_EX + '\rProcessing Information ' + c)
         sys.stdout.flush()
         time.sleep(0.4)
+    sys.stdout.write('\rDone!     ')
 
 
 def getCfg(cfg, page_status):
