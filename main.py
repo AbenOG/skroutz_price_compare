@@ -62,7 +62,7 @@ def readFile(cfg, page_status):
                         f'1. Copy the Skroutz product link\n'
                         f'2. Paste\n'
                         f'3. Every new link HAS to be in a new line!\n'
-                        f'4. "Don\'t Leave any whitespaces inbetween.'
+                        f'4. "Don\'t Leave any whitespaces inbetween.\n'
                         f'5. Restart the program and try again\n'
                         f'Note: If the file is not set correctly no data will be displayed during runtime')
     return print(Fore.LIGHTRED_EX,
