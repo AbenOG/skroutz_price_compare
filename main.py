@@ -1,7 +1,6 @@
 import re
 import sys
 import time
-
 from bs4 import BeautifulSoup as soup
 from colorama import Fore
 from playwright.sync_api import sync_playwright
@@ -152,7 +151,7 @@ def getContent(url, cfg, page_status):
                     shopPrice = []
                     productTitle = clean_html.sub('', str(product_title))
 
-                    # Here we extract the value found, store it in a variable, clear the HTML tags,
+                    # Here we extract the values found, store them in a variable, clear the HTML tags,
                     # Then we append each to its respected list created above.
                     for names in shop_name:
                         newName = str(names)
@@ -168,13 +167,13 @@ def getContent(url, cfg, page_status):
 
                             _min = min(shopPrice, default=0)
                         except ValueError:
-                            # Sometimes it creates a value error when it tries to grab more prices than there are shops.
+                            # Sometimes it throws a value error when it tries to grab more prices than there are shops.
                             # Because for each product there is a store selling the product, and each product has a price.
-                            # If it gets more prices than it gets products or stores respectively then it throws a value error.
+                            # If it gets more prices than it gets products or shops respectively then it throws a value error.
                             # So it's optimal to break the script and proceed.
                             break
                     # Finally, if we iterate to the end of the list, close the browsers and pages.
-                    # Else we get an I/O error.
+                    # Else we get an I/O error and a warning that we left them open (apparently he doesn't like that).
                     if x == len(url) - 1:
                         page.close()
                         browser.close()
@@ -192,7 +191,7 @@ def processContent(shopName, price, title, _min):
     avg = 0
     prodCount = 0
 
-    # Here we display all the content to the user end.
+    # Here we display all the content to the end user.
     print(Fore.LIGHTMAGENTA_EX + f'\n\n{title:^15}')
 
     print(Fore.LIGHTBLACK_EX + '===============================================================')

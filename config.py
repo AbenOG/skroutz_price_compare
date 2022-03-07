@@ -9,6 +9,8 @@ from playwright.sync_api import sync_playwright
 
 def readConfig():
     with sync_playwright() as p:
+        # Here we need to Launch our Chromium browser to save the webpage status.
+        # So before we proceed we can check wether the website is up, down, or we do have an internet connection.
         browser = p.chromium.launch_persistent_context(f'{dataPath()}' + '\\browserData')
         page = browser.new_page()
         page_status = page.goto('https://www.skroutz.gr')
