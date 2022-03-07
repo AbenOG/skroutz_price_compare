@@ -7,7 +7,6 @@ from main import getCfg, dataPath, clear
 from playwright.sync_api import sync_playwright
 
 
-
 def readConfig():
     with sync_playwright() as p:
         # Here we need to Launch our Chromium browser to save the webpage status.
@@ -45,7 +44,7 @@ def readConfig():
         # Some OS's like Linux or macOS might need extended permissions to perform this action.
         except PermissionError:
             return print(Fore.RED + "Insufficient permissions: \n"
-                                            "Please run the script again as an Admin, or give it the appropriate permissions."), sys.exit()
+                                    "Please run the script again as an Admin, or give it the appropriate permissions."), sys.exit()
 
         print(Fore.LIGHTGREEN_EX + 'Configuration generated successfully inside the executable directory ✔\n'
                                    'Proceeding..️\n')
@@ -75,13 +74,13 @@ def readConfig():
             # Send warning + helpful instructions if the website blocked users network from too many requests.
             if page_status.status == 429:
                 print(Fore.RED + '\n!! WARNING !! >[HEADLESS MODE TEMPORARILY DISABLED]<\n'
-                                         '========================================================\n'
-                                         'Because of the unusual number of requests coming from your network\n'
-                                         'Skroutz.gr has blocked your access unless you verify you\'re not a robot\n'
-                                         'Headless mode will not work during this phase, usually for about an hour or two.\n'
-                                         'For now this is the only way to get through this.\n'
-                                         'After you verify and solve the captcha, please press the Enter key button on your keyboard.\n'
-                                         'While in this phase, the program will continue starting in windowed mode instead until it goes back to normal.\n')
+                                 '========================================================\n'
+                                 'Because of the unusual number of requests coming from your network\n'
+                                 'Skroutz.gr has blocked your access unless you verify you\'re not a robot\n'
+                                 'Headless mode will not work during this phase, usually for about an hour or two.\n'
+                                 'For now this is the only way to get through this.\n'
+                                 'After you verify and solve the captcha, please press the Enter key button on your keyboard.\n'
+                                 'While in this phase, the program will continue starting in windowed mode instead until it goes back to normal.\n')
                 print(Fore.LIGHTYELLOW_EX +
                       'Note:\n'
                       'Even after verification, the program will continue to execute in windowed mode.\n'

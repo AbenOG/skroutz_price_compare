@@ -1,3 +1,4 @@
+import itertools
 import re
 import sys
 import time
@@ -7,10 +8,21 @@ from playwright.sync_api import sync_playwright
 from datetime import datetime
 import os
 import platform
+import threading
 
 # This Regex will clean the tags from HTML code.
 clean_html = re.compile(r'<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});')
 user_agent = r'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36'
+
+
+def animate(done):
+    for c in itertools.cycle(['.', '..', '...', '....']):
+        if done():
+            break
+        sys.stdout.write(Fore.LIGHTCYAN_EX + '\rProcessing Information ' + c)
+        sys.stdout.flush()
+        time.sleep(0.5)
+    sys.stdout.write('\rDone!     ')
 
 
 def getCfg(cfg, page_status):
@@ -78,9 +90,13 @@ def getContent(url, cfg, page_status):
     # If the "X" Equals to 0 then we initialize our browser for the first time.
     # If the "X" > 0 we just need to switch pages and go to the next one after each iteration.
     if len(url) > 0:
+        # Actual non-sense.
+        # But it's fancy...
+        done = False
+        t1 = threading.Thread(target=animate, args=(lambda: done,))
+        t1.start()
         with sync_playwright() as p:
-            print(Fore.LIGHTGREEN_EX + 'Loading data..\n')
-            for x in range(0, len(url)):
+            for x in range(len(url)):
                 # First we need to verify the captcha.
                 # So if the status code returns 429 that means that the website is expecting us to do so.
                 # Once done, proceed as usual.
@@ -143,6 +159,7 @@ def getContent(url, cfg, page_status):
                     # We store the values using HTML classes as the target.
                     # So "Dominant-price" is an HTML class that holds the value of the price tag.
                     # You can figure the rest by reading the variable names.
+
                     dominant_price = s.find_all(class_="dominant-price")
                     shop_name = s.find_all(class_="shop-name")
                     product_title = s.find_all("title")
@@ -178,6 +195,8 @@ def getContent(url, cfg, page_status):
                         page.close()
                         browser.close()
                         p.stop()
+                        done = True
+                        t1.join()
 
                     processContent(shopName, shopPrice, productTitle, _min)
     else:
