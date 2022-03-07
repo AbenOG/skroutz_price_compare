@@ -9,13 +9,14 @@ from datetime import datetime
 import os
 import platform
 
+# This Regex will clean the tags from HTML code.
 clean_html = re.compile(r'<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});')
 user_agent = r'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36'
 
 
-def getCfg(cfg):
+def getCfg(cfg, page_status):
     clear()
-    return readFile(cfg)
+    return readFile(cfg, page_status)
 
 
 def clear():
@@ -32,12 +33,19 @@ def getTime():
 
 
 def dataPath():
+    # This serves as a browser data folder.
+    # Stores all the browsers' information, so it doesn't run as incognito everytime.
+    # Why? Because when the status returns 429 and the user solves the captcha, the browser will not remember
+    # Hence why we need to store our data.
     path = os.path.expanduser(f'~\\Documents\\SkroutzPriceCompare\\')
     return path
 
 
-def readFile(cfg):
+def readFile(cfg, page_status):
     lines = []
+
+    # Open the links file and check all the lines that start with "https://www.skroutz.gr"
+    # Then append them to the "lines" list created above.
     with open('links.txt', 'r', encoding='UTF-8') as file:
         try:
             for line in file.readlines():
@@ -45,7 +53,9 @@ def readFile(cfg):
                     lines.append(line)
                 else:
                     pass
-            return getContent(lines, cfg)
+            return getContent(lines, cfg, page_status)
+
+        # If the links.txt file is not found, it will create a new one and exit the script.
         except FileNotFoundError:
             with open('links.txt', 'w', encoding='UTF-8') as _file:
                 _file.write(f'File Auto generated: {getTime()}\n'
@@ -59,46 +69,38 @@ def readFile(cfg):
                          'File (links.txt) not found.\n'
                          'Generated a new one successfully inside the executable path.\n'
                          'Please populate the txt file with links.\n'
-                         'Read the file generated for instructions.')
+                         'Read the file generated for instructions.'), sys.exit()
 
 
-def getContent(url, cfg):
-    doneCaptcha = None
+def getContent(url, cfg, page_status):
+    # The script then proceeds to init playwright
+    # The "X" holds the number of the URLs fetched from the script above.
+    # If the "X" Equals to 0 then we initialize our browser for the first time.
+    # If the "X" > 0 we just need to switch pages and go to the next one after each iteration.
 
     with sync_playwright() as p:
         if len(url) > 0:
             print(Fore.LIGHTGREEN_EX + 'Loading data..\n')
             for x in range(0, len(url)):
-                if x == 0 and cfg.get('iscaptcha') and not doneCaptcha:
+                # First we need to verify the captcha.
+                # So if the status code returns 429 that means that the website is expecting us to do so.
+                # Once done, proceed as usual.
+                if x == 0 and page_status.status == 429:
                     browser = p.chromium.launch_persistent_context(f'{dataPath()}' + '\\browserData',
                                                                    java_script_enabled=cfg.get('js'),
                                                                    bypass_csp=cfg.get('csp'),
                                                                    user_agent=user_agent,
                                                                    locale=cfg.get('locale'),
-                                                                   headless=cfg.get('headless'),
+                                                                   headless=False,
                                                                    timezone_id=cfg.get('tmz_id'),
                                                                    no_viewport=True,
                                                                    viewport=None,
-                                                                   args=["--window-size=1000,720"],
-                                                                   timeout=20000)
+                                                                   args=["--window-size=1000,720"])
                     _page = browser.new_page()
                     _page.goto('https://skroutz.gr')
                     input(Fore.LIGHTRED_EX + 'Please press enter when done verifying the captcha.')
-                    doneCaptcha = True
 
-                if x == 0 and cfg.get('iscaptcha') and doneCaptcha:
-                    browser.close()
-                    browser = p.chromium.launch_persistent_context(f'{dataPath()}' + '\\browserData',
-                                                                   java_script_enabled=cfg.get('js'),
-                                                                   bypass_csp=cfg.get('csp'),
-                                                                   user_agent=user_agent,
-                                                                   locale=cfg.get('locale'),
-                                                                   headless=cfg.get('headless'),
-                                                                   timezone_id=cfg.get('tmz_id'),
-                                                                   no_viewport=True,
-                                                                   viewport=None,
-                                                                   args=["--window-size=600,480"])
-                if x == 0 and not cfg.get('iscaptcha'):
+                if x == 0 and page_status.ok:
                     browser = p.chromium.launch_persistent_context(f'{dataPath()}' + '\\browserData',
                                                                    java_script_enabled=cfg.get('js'),
                                                                    bypass_csp=cfg.get('csp'),
@@ -109,11 +111,16 @@ def getContent(url, cfg):
                 if browser:
                     page = browser.new_page()
 
+                    # In this case we need to add "shops" in the end of the link
+                    # Due to a JS script that takes you down to the store list.
+                    # It is necessary for this to work.
                     if url[x].endswith('#shops'):
                         page.goto(url[x])
                     else:
                         page.goto(url[x] + "#shops")
 
+                    # This part is where the browser scrolls down and waits 0.35 seconds for each scroll.
+                    # This way it fetches way more stores.
                     time.sleep(.35)
                     page.mouse.wheel(0, 2000)
                     time.sleep(.25)
@@ -131,8 +138,12 @@ def getContent(url, cfg):
                     time.sleep(.25)
                     content = page.content()
 
+                    # Init the HTML parser.
                     s = soup(content, 'html.parser')
 
+                    # We store the values using HTML classes as the target.
+                    # So "Dominant-price" is an HTML class that holds the value of the price tag.
+                    # You can figure the rest by reading the variable names.
                     dominant_price = s.find_all(class_="dominant-price")
                     shop_name = s.find_all(class_="shop-name")
                     product_title = s.find_all("title")
@@ -141,6 +152,8 @@ def getContent(url, cfg):
                     shopPrice = []
                     productTitle = clean_html.sub('', str(product_title))
 
+                    # Here we extract the value found, store it in a variable, clear the HTML tags,
+                    # Then we append each to its respected list created above.
                     for names in shop_name:
                         newName = str(names)
                         cleanName = clean_html.sub('', newName)
@@ -155,8 +168,13 @@ def getContent(url, cfg):
 
                             _min = min(shopPrice, default=0)
                         except ValueError:
+                            # Sometimes it creates a value error when it tries to grab more prices than there are shops.
+                            # Because for each product there is a store selling the product, and each product has a price.
+                            # If it gets more prices than it gets products or stores respectively then it throws a value error.
+                            # So it's optimal to break the script and proceed.
                             break
-
+                    # Finally, if we iterate to the end of the list, close the browsers and pages.
+                    # Else we get an I/O error.
                     if x == len(url) - 1:
                         page.close()
                         browser.close()
@@ -174,6 +192,7 @@ def processContent(shopName, price, title, _min):
     avg = 0
     prodCount = 0
 
+    # Here we display all the content to the user end.
     print(Fore.LIGHTMAGENTA_EX + f'\n\n{title:^15}')
 
     print(Fore.LIGHTBLACK_EX + '===============================================================')
@@ -193,6 +212,8 @@ def processContent(shopName, price, title, _min):
         pass
     print(Fore.LIGHTBLACK_EX + '===============================================================\n\n')
 
+    # Here we save everything to our data file created in "dataPath".
+    # There we can analyze further how many stores sell the "X" product, the average price, and the lowest price.
     try:
         if not os.path.isfile(path):
             with (open(path, 'w', encoding='UTF-8')) as _data:
